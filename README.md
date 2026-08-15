@@ -102,16 +102,6 @@ Investigating high booking cancellation rates, seasonal revenue fluctuations, cu
 #### Model Overview
 The data model uses a Star Schema architecture centered on `Fact_bookings`. `DimHotel`, `DimCustomer`, and `DimDate` surround the fact table, providing descriptive attributes used to filter transactional metrics. One-to-many relationships were established between each dimension and the central fact table.
 
-+-------------------+       +-------------------+       +-------------------+
-   |      DimHotel     |       |    DimCustomer    |       |      DimDate      |
-   +-------------------+       +-------------------+       +-------------------+
-             | 1                         | 1                         | 1
-             |                           |                           |
-             | *                         | *                         | *
-    +-------------------------------------------------------------------------------+
-    |                                 Fact_bookings                                 |
-    +-------------------------------------------------------------------------------+
-
 #### 1. Why `Fact_bookings` Was Selected as the Fact Table
 `Fact_bookings` contains individual reservation records at the lowest level of detail. It houses the primary numerical metrics—such as `adr` (Average Daily Rate), `Booking Revenue`, `Total Nights`, `lead_time`, and guest counts—as well as transactional status indicators (`is_canceled`). This makes it the central engine for aggregations and KPI calculations.
 
