@@ -204,3 +204,19 @@ The reporting solution is structured into 3 interactive, purpose-built report pa
   - Financial Loss Matrix cross-tabulating lost revenue across market segments and deposit types.
 - **Interactivity:** Lead-time group slicers allowing dynamic deep-dives into high-risk reservation windows.
 
+## SECTION F: BUSINESS INSIGHTS & RECOMMENDATIONS
+
+### 1. Key Business Findings
+
+* **Cancellation Revenue Leakage:** High overall cancellation rates significantly degrade projected gross margins. Overbooking strategies and uncollected deposits directly result in substantial lost revenue.
+* **Lead Time Vulnerability:** Reservations booked more than 90 days in advance exhibit exponentially higher cancellation rates compared to short-lead bookings, indicating that long planning horizons without non-refundable deposits create severe inventory churn.
+* **Channel Performance:** Online Travel Agencies (OTAs) drive the largest overall volume of bookings but carry higher cancellation rates compared to Direct and Corporate booking channels.
+* **Demographic Spend Dynamics:** Transient guest segments generate the highest Average Daily Rate (ADR), whereas Family segments generate longer average length of stay but lower total volume.
+
+### 2. Actionable Strategic Recommendations
+
+1. **Optimize Lead-Time Deposit Policies:** Enforce mandatory non-refundable deposits or tiered cancellation fees for bookings made with a lead time exceeding 60 days to reduce high-lead inventory attrition.
+2. **Incentivize Direct Channel Bookings:** Offer exclusive perks (e.g., free room upgrades, flexible late check-out) for direct website bookings to shift customer volume away from high-commission, high-churn OTA platforms.
+3. **Targeted Length-of-Stay Promotions:** Implement minimum-length-of-stay discounts during off-peak periods to stabilize occupancy rates and boost total booking revenue per guest.
+4. **Dynamic Pricing for High-ADR Segments:** Apply surge pricing model adjustments during peak arrival months targeting high-spending transient and corporate travelers to maximize overall revenue yield.
+
