@@ -82,3 +82,15 @@ Investigating high booking cancellation rates, seasonal revenue fluctuations, cu
 - **Transformation:** Referenced `FactBookings` to spawn `DimHotel` with unique hotel categories.
 - **Reason:** Transitions architecture toward a normalized Star Schema.
 - **Result:** Lean dimension lookup query created.
+
+### 9. Binary Numeric Status Flag
+- **Problem:** `is_canceled` was stored as a binary integer (`0` or `1`), making charts and legend titles unintuitive.
+- **Transformation:** Created conditional column `Booking Status` mapping `1` to `"Canceled"` and `0` to `"Completed"`.
+- **Reason:** Replaces raw codes with descriptive labels for professional visual storytelling.
+- **Result:** Clear categorical labels (`Canceled` vs. `Completed`) across all visualizations.
+
+### 10. Unsegmented Occupancy Demographics
+- **Problem:** No explicit categorical field existed to distinguish family trips from non-family groups.
+- **Transformation:** Added custom column `Guest Segment` categorizing bookings with children/babies as `"Family"` and all others as `"Adults Only"`.
+- **Reason:** Enables targeted customer demographic filtering and spend evaluation.
+- **Result:** Functional demographic dimension field for comparative profiling.
