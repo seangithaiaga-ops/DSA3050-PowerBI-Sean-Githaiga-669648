@@ -94,3 +94,46 @@ Investigating high booking cancellation rates, seasonal revenue fluctuations, cu
 - **Transformation:** Added custom column `Guest Segment` categorizing bookings with children/babies as `"Family"` and all others as `"Adults Only"`.
 - **Reason:** Enables targeted customer demographic filtering and spend evaluation.
 - **Result:** Functional demographic dimension field for comparative profiling.
+
+## SECTION C: DATA MODELLING
+
+### Data Model Architecture & Technical Explanation
+
+#### Model Overview
+The data model uses a Star Schema architecture centered on `Fact_bookings`. `DimHotel`, `DimCustomer`, and `DimDate` surround the fact table, providing descriptive attributes used to filter transactional metrics. One-to-many relationships were established between each dimension and the central fact table.
+
++-------------------+       +-------------------+       +-------------------+
+   |      DimHotel     |       |    DimCustomer    |       |      DimDate      |
+   +-------------------+       +-------------------+       +-------------------+
+             | 1                         | 1                         | 1
+             |                           |                           |
+             | *                         | *                         | *
+    +-------------------------------------------------------------------------------+
+    |                                 Fact_bookings                                 |
+    +-------------------------------------------------------------------------------+
+
+#### 1. Why `Fact_bookings` Was Selected as the Fact Table
+`Fact_bookings` contains individual reservation records at the lowest level of detail. It houses the primary numerical metrics—such as `adr` (Average Daily Rate), `Booking Revenue`, `Total Nights`, `lead_time`, and guest counts—as well as transactional status indicators (`is_canceled`). This makes it the central engine for aggregations and KPI calculations.
+
+#### 2. Why Each Dimension Table Was Created
+- **`DimHotel`:** Created to isolate property categories (`City Hotel` vs. `Resort Hotel`). Normalizing this field eliminates redundant text strings across ~119,000 fact rows and optimizes memory efficiency.
+- **`DimCustomer`:** Created to group distinct customer types (`Contract`, `Group`, `Transient`, `Transient-Party`) for targeted demographic slicing without duplicating customer attributes across transactional rows.
+- **`DimDate`:** Created as a dedicated calendar lookup covering continuous dates across all arrival years. A separate date table is required in Power BI to support Time Intelligence DAX functions (such as `SAMEPERIODLASTYEAR`) without relying on implicit auto-date hierarchies.
+
+#### 3. Relationships Used
+- `DimHotel[hotel]` -> `Fact_bookings[hotel]`
+- `DimCustomer[customer_type]` -> `Fact_bookings[customer_type]`
+- `DimDate[Date]` -> `Fact_bookings[Arrival Date]`
+
+#### 4. Cardinality Decisions
+**One-to-Many (1:*)** cardinality was applied across all three relationships:
+- Each hotel property, customer type, and calendar date appears once (1) in its respective dimension table and connects to multiple reservation records (*) in `Fact_bookings`.
+
+#### 5. Cross-Filter Direction Decisions
+**Single Cross-Filter Direction** (Dimension -> Fact) was strictly enforced to ensure filter context flows unidirectionally from lookup dimensions down to `Fact_bookings`, eliminating ambiguous circular filter paths and performance degradation.
+
+#### 6. Modelling Challenges Encountered & Resolutions
+- **Date Type Mismatch Error:** `Arrival Date` in `Fact_bookings` initially had text formatting upon import, causing DAX calendar generation errors when calculating minimum and maximum year bounds.
+- **Resolution:** Explicitly updated `Arrival Date` to a strict `Date` data type in Power Query prior to model loading, ensuring `DimDate` generated continuously and established clean referential integrity.
+
+
