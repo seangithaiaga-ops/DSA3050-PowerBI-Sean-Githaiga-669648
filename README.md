@@ -1,222 +1,184 @@
-# DSA3050 Power BI Examination - Business Intelligence Solution
-**Student Name:** [Sean Nderitu]  
-**Registration Number:** [669648]  
-**Dataset:** Hotel Booking Demand (Hospitality Performance & Cancellations) 
-https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand?resource=download
+# DSA3050 Power BI Examination — Business Intelligence Solution
+
+**Student Name:** Sean Nderitu
+**Registration Number:** 669648
+**Dataset:** Hotel Booking Demand (Hospitality Performance & Cancellations)
+Source: https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand?resource=download
 
 ---
 
 ## SECTION A: Dataset Selection & Understanding
 
 ### 1. Dataset Source
-The dataset was obtained from Kaggle / Open Data Repository (Hotel Booking Demand Dataset).
+Pulled from Kaggle — the Hotel Booking Demand dataset (jessemostipak).
 
 ### 2. What the Dataset Represents
-This dataset contains reservation records for two hotels: a City Hotel and a Resort Hotel. It captures arrival dates, length of stay, customer types, deposit types, country of origin, average daily rates (ADR), and reservation cancellation statuses.
+This is reservation-level data from two hotels, a City Hotel and a Resort Hotel. Each row is a single booking, with arrival dates, how long the guest stayed, what kind of customer made the booking, the deposit arrangement, where they're from, the average daily rate they paid, and whether the booking eventually got cancelled.
 
-### 3. Selection Justification
-Selected because it provides ~119,000 multi-dimensional records with an ideal balance of numerical metrics, categorical attributes, and dates. It supports critical hospitality KPIs like Cancellation Rate, Average Daily Rate (ADR), Lead Time, and Revenue per Available Room (RevPAR).
+### 3. Why I Picked This Dataset
+It sits at a good size — around 119,000 rows — with a genuine mix of numbers, categories, and dates to work with, rather than something already summarized into a handful of columns. It also maps naturally onto real hospitality KPIs: cancellation rate, ADR, lead time, and revenue per booking, which gave me enough to build a proper analytical story instead of just a few charts.
 
-### 4. Main Available Variables
-- **Hotel & Booking Status:** `hotel`, `is_canceled`, `lead_time`, `reservation_status`
-- **Temporal Fields:** `arrival_date_year`, `arrival_date_month`, `arrival_date_day_of_month`, `stays_in_weekend_nights`, `stays_in_week_nights`
-- **Guest & Market Attributes:** `adults`, `children`, `babies`, `country`, `market_segment`, `distribution_channel`, `customer_type`
-- **Financial Metrics:** `adr` (Average Daily Rate), `deposit_type`, `required_car_parking_spaces`
+### 4. Main Variables
+- **Booking status:** `hotel`, `is_canceled`, `lead_time`, `reservation_status`
+- **Dates and stay length:** `arrival_date_year`, `arrival_date_month`, `arrival_date_day_of_month`, `stays_in_weekend_nights`, `stays_in_week_nights`
+- **Guest and market info:** `adults`, `children`, `babies`, `country`, `market_segment`, `distribution_channel`, `customer_type`
+- **Money-related fields:** `adr` (average daily rate), `deposit_type`, `required_car_parking_spaces`
 
-### 5. Analytical Problem
-Investigating high booking cancellation rates, seasonal revenue fluctuations, customer segment profitability, and lead-time patterns to optimize hotel inventory and cancellation policies.
+### 5. The Problem I'm Investigating
+Why bookings get cancelled, how revenue moves through the year, which customer segments actually make the hotel money, and how booking lead time plays into cancellation risk — with the goal of pointing toward better cancellation policy and inventory decisions.
 
 ### 6. Analytical Questions
-1. What is the overall booking cancellation rate, and how much potential revenue is lost due to canceled bookings?
-2. How does monthly ADR (Average Daily Rate) and booking volume vary between City Hotel and Resort Hotel?
-3. What is the relationship between booking lead time and cancellation likelihood across different market segments?
-4. Which customer types and market segments generate the highest average revenue per booking?
-5. How do cancellation rates differ based on deposit types (e.g., Non-Refund vs. No Deposit)?
+1. What's the overall cancellation rate, and roughly how much revenue does it cost the hotel?
+2. How do ADR and booking volume change month to month, and does that differ between the two hotels?
+3. Does lead time predict cancellation likelihood, and does that relationship change depending on market segment?
+4. Which customer types and market segments bring in the most revenue per booking?
+5. Do cancellation rates differ noticeably by deposit type — for example, Non-Refund vs. No Deposit?
 
-## SECTION B: POWER QUERY – DATA CLEANING & TRANSFORMATION
+---
+
+## SECTION B: Power Query — Data Cleaning & Transformation
 
 ### 1. Inconsistent Category Formatting
-- **Problem:** The `market_segment` and `distribution_channel` fields had irregular casing.
-- **Transformation:** Applied `Format -> Capitalize Each Word`.
-- **Reason:** Standardizes values so categories are not split during visual slicing.
-- **Result:** Clean, uniformly capitalized market categories.
+**Problem:** `market_segment` and `distribution_channel` had some irregular casing across values.
+**Transformation:** Used Transform → Format → Capitalize Each Word on both columns.
+**Reason:** Keeps category names consistent so they don't accidentally split into separate slices in charts and slicers.
+**Result:** Both fields now show clean, uniformly capitalized categories.
 
-### 2. Disparate Date Components
-- **Problem:** Arrival year, month, and day were stored across 3 separate columns.
-- **Transformation:** Created custom `Arrival Date` column using M function `#date()`.
-- **Reason:** Required for setting up continuous relationships with `DimDate`.
-- **Result:** A single valid `Date` column for time intelligence.
+### 2. Date Split Across Three Columns
+**Problem:** The arrival date was broken up into `arrival_date_year`, `arrival_date_month`, and `arrival_date_day_of_month` — three separate columns instead of one usable date.
+**Transformation:** Built a custom `Arrival Date` column using the `#date()` function to stitch the three parts back together, then set its type to Date.
+**Reason:** I needed one real date field to build a relationship to `DimDate` and to run any time-intelligence DAX later on.
+**Result:** A single, properly typed `Arrival Date` column that the model can actually use.
 
-### 3. Null and Missing Values
-- **Problem:** The `country` field contained null/missing values.
-- **Transformation:** Replaced null values with `"Unknown"`.
-- **Reason:** Prevents missing value blanks in geography visuals and slicers.
-- **Result:** Categorized unknown regions cleanly.
+### 3. Missing Values in Country
+**Problem:** A number of rows had a blank `country` field.
+**Transformation:** Replaced the blanks with `"Unknown"`.
+**Reason:** Blank values break map visuals and mess with slicer counts, so it's better to label them explicitly than leave them empty.
+**Result:** Every row now has a country value, with unresolved ones clearly marked rather than hidden.
 
-### 4. Separate Weekend/Weekday Nights
-- **Problem:** Total length of stay was divided across weekend and week nights.
-- **Transformation:** Added custom column `Total Nights` (`stays_in_weekend_nights` + `stays_in_week_nights`).
-- **Reason:** Provides a single metric to evaluate guest duration.
-- **Result:** Unified total stay night metric.
+### 4. Stay Length Split Into Weekday/Weekend
+**Problem:** Length of stay was divided between `stays_in_weekend_nights` and `stays_in_week_nights`, with no combined total.
+**Transformation:** Added a custom column, `Total Nights`, as the sum of the two.
+**Reason:** Needed one number to represent how long a guest actually stayed, both for reporting and for calculating revenue.
+**Result:** A single `Total Nights` metric usable across the model.
 
-### 5. Missing Total Revenue Field
-- **Problem:** Dataset only supplied Average Daily Rate (`adr`), not total reservation value.
-- **Transformation:** Added custom column `Booking Revenue` (`Total Nights` * `adr`).
-- **Reason:** Needed to compute core monetary performance measures.
-- **Result:** Accurate overall booking monetary value.
+### 5. No Total Revenue Field
+**Problem:** The dataset only gives the average daily rate (`adr`) — there's no field for what a booking was actually worth in total.
+**Transformation:** Added a custom column, `Booking Revenue`, calculated as `Total Nights * adr`.
+**Reason:** Almost every financial KPI I wanted (total revenue, lost revenue, revenue by segment) needed a per-booking revenue figure to work from.
+**Result:** A `Booking Revenue` column that feeds directly into the DAX measures in Section D.
 
-### 6. Continuous Ungrouped Lead Times
-- **Problem:** `lead_time` in days was too granular for visual grouping.
-- **Transformation:** Added conditional column `Lead Time Group` bucketed into 0-7 days, 8-30 days, 31-90 days, 90+ days.
-- **Reason:** Enables strategic lead time analysis.
-- **Result:** Categorical lead time buckets.
+### 6. Lead Time Was Too Granular
+**Problem:** `lead_time` is stored in raw days, which isn't very useful for grouping or slicing in a dashboard.
+**Transformation:** Added a conditional column, `Lead Time Group`, bucketing bookings into Last Minute (0–7 days), Short Lead (8–30 days), Medium Lead (31–90 days), and Long Lead (90+ days).
+**Reason:** Bucketed categories are far easier to slice by and compare visually than hundreds of distinct day values.
+**Result:** A `Lead Time Group` field used throughout the diagnostic page.
 
-### 7. Invalid Zero-Guest Records
-- **Problem:** Occasional records showed 0 adults, 0 children, and 0 babies.
-- **Transformation:** Applied row filter to exclude entries where total guest count equals zero.
-- **Reason:** Cleans invalid transactional noise from analysis.
-- **Result:** Dataset filtered to valid guest stays only.
+### 7. Zero-Guest Records
+**Problem:** A small number of rows had zero adults, zero children, and zero babies — bookings with nobody actually staying, which looks like bad data rather than a real reservation.
+**Transformation:** Filtered these rows out.
+**Reason:** These records would distort occupancy and guest-count metrics if left in.
+**Result:** Only rows representing valid, occupied stays remain in the dataset.
 
-### 8. Flat Table Schema Architecture
-- **Problem:** Data was loaded as one single unnormalized flat table.
-- **Transformation:** Referenced `FactBookings` to spawn `DimHotel` with unique hotel categories.
-- **Reason:** Transitions architecture toward a normalized Star Schema.
-- **Result:** Lean dimension lookup query created.
+### 8. Everything Was One Flat Table
+**Problem:** The raw data loads as a single unnormalized table, with no separation between transactional data and descriptive attributes.
+**Transformation:** Referenced (not duplicated) `FactBookings` to create a new query, `DimHotel`, keeping only the `hotel` column and removing duplicates.
+**Reason:** First step toward a proper star schema — pulls the hotel property out as its own lookup table instead of repeating the text across ~119,000 rows.
+**Result:** A lean two-value `DimHotel` dimension ready to relate back to the fact table.
 
-### 9. Binary Numeric Status Flag
-- **Problem:** `is_canceled` was stored as a binary integer (`0` or `1`), making charts and legend titles unintuitive.
-- **Transformation:** Created conditional column `Booking Status` mapping `1` to `"Canceled"` and `0` to `"Completed"`.
-- **Reason:** Replaces raw codes with descriptive labels for professional visual storytelling.
-- **Result:** Clear categorical labels (`Canceled` vs. `Completed`) across all visualizations.
+### 9. Cancellation Flag Was a Raw 0/1
+**Problem:** `is_canceled` is stored as a binary integer, which isn't very readable in chart legends or tooltips.
+**Transformation:** Added a conditional column, `Booking Status`, mapping `1` to `"Canceled"` and `0` to `"Completed"`.
+**Reason:** Labels read better than raw codes, especially on an executive-facing page.
+**Result:** A `Booking Status` field showing "Canceled" or "Completed" instead of 1s and 0s.
 
-### 10. Unsegmented Occupancy Demographics
-- **Problem:** No explicit categorical field existed to distinguish family trips from non-family groups.
-- **Transformation:** Added custom column `Guest Segment` categorizing bookings with children/babies as `"Family"` and all others as `"Adults Only"`.
-- **Reason:** Enables targeted customer demographic filtering and spend evaluation.
-- **Result:** Functional demographic dimension field for comparative profiling.
+### 10. No Family vs. Non-Family Distinction
+**Problem:** There was no field separating bookings with children from bookings without — useful context for demographic analysis that didn't exist yet.
+**Transformation:** Added a custom column, `Guest Segment`, labeling any booking with children or babies as `"Family"` and everything else as `"Adults Only"`.
+**Reason:** Wanted a quick way to compare spend and stay length between family and non-family guests.
+**Result:** A working `Guest Segment` field used in the customer analysis page.
 
-## SECTION C: DATA MODELLING
+---
 
-### Data Model Architecture & Technical Explanation
+## SECTION C: Data Modelling
 
-#### Model Overview
-The data model uses a Star Schema architecture centered on `Fact_bookings`. `DimHotel`, `DimCustomer`, and `DimDate` surround the fact table, providing descriptive attributes used to filter transactional metrics. One-to-many relationships were established between each dimension and the central fact table.
+### Model Overview
+The model is built as a star schema centered on `Fact_bookings`. `DimHotel`, `DimCustomer`, and `DimDate` sit around it, each providing descriptive attributes that filter the fact table. All three relationships are one-to-many, dimension to fact.
 
-#### 1. Why `Fact_bookings` Was Selected as the Fact Table
-`Fact_bookings` contains individual reservation records at the lowest level of detail. It houses the primary numerical metrics—such as `adr` (Average Daily Rate), `Booking Revenue`, `Total Nights`, `lead_time`, and guest counts—as well as transactional status indicators (`is_canceled`). This makes it the central engine for aggregations and KPI calculations.
+### 1. Why `Fact_bookings` Is the Fact Table
+It holds the data at the lowest level of detail — one row per reservation — and carries all the core numeric fields (`adr`, `Booking Revenue`, `Total Nights`, `lead_time`, guest counts) plus the cancellation flag. Everything gets aggregated from here.
 
-#### 2. Why Each Dimension Table Was Created
-- **`DimHotel`:** Created to isolate property categories (`City Hotel` vs. `Resort Hotel`). Normalizing this field eliminates redundant text strings across ~119,000 fact rows and optimizes memory efficiency.
-- **`DimCustomer`:** Created to group distinct customer types (`Contract`, `Group`, `Transient`, `Transient-Party`) for targeted demographic slicing without duplicating customer attributes across transactional rows.
-- **`DimDate`:** Created as a dedicated calendar lookup covering continuous dates across all arrival years. A separate date table is required in Power BI to support Time Intelligence DAX functions (such as `SAMEPERIODLASTYEAR`) without relying on implicit auto-date hierarchies.
+### 2. Why Each Dimension Exists
+- **`DimHotel`** — pulls the two hotel properties (City Hotel, Resort Hotel) out into their own table instead of repeating that text on every one of the ~119,000 fact rows.
+- **`DimCustomer`** — groups the distinct customer types (Contract, Group, Transient, Transient-Party) so I can slice by customer profile without duplicating that attribute across every transaction.
+- **`DimDate`** — a proper calendar table spanning all the arrival years in the dataset. Power BI needs a dedicated date table like this for time-intelligence functions such as `SAMEPERIODLASTYEAR` to work correctly — the built-in auto date/time hierarchy isn't reliable enough for that.
 
-#### 3. Relationships Used
-- `DimHotel[hotel]` -> `Fact_bookings[hotel]`
-- `DimCustomer[customer_type]` -> `Fact_bookings[customer_type]`
-- `DimDate[Date]` -> `Fact_bookings[Arrival Date]`
+### 3. Relationships
+- `DimHotel[hotel]` → `Fact_bookings[hotel]`
+- `DimCustomer[customer_type]` → `Fact_bookings[customer_type]`
+- `DimDate[Date]` → `Fact_bookings[Arrival Date]`
 
-#### 4. Cardinality Decisions
-**One-to-Many (1:*)** cardinality was applied across all three relationships:
-- Each hotel property, customer type, and calendar date appears once (1) in its respective dimension table and connects to multiple reservation records (*) in `Fact_bookings`.
+### 4. Cardinality
+All three relationships are one-to-many (1:*) — each hotel, each customer type, and each calendar date appears once in its dimension table and connects to many rows in `Fact_bookings`.
 
-#### 5. Cross-Filter Direction Decisions
-**Single Cross-Filter Direction** (Dimension -> Fact) was strictly enforced to ensure filter context flows unidirectionally from lookup dimensions down to `Fact_bookings`, eliminating ambiguous circular filter paths and performance degradation.
+### 5. Cross-Filter Direction
+Set to single direction, dimension → fact, across the board. This keeps filter context flowing one way and avoids the ambiguous filter paths and performance issues that bidirectional relationships can cause.
 
-#### 6. Modelling Challenges Encountered & Resolutions
-- **Date Type Mismatch Error:** `Arrival Date` in `Fact_bookings` initially had text formatting upon import, causing DAX calendar generation errors when calculating minimum and maximum year bounds.
-- **Resolution:** Explicitly updated `Arrival Date` to a strict `Date` data type in Power Query prior to model loading, ensuring `DimDate` generated continuously and established clean referential integrity.
+### 6. A Modelling Problem I Ran Into
+When I first built `Arrival Date` in Power Query, it loaded as text instead of a date. That silently broke `DimDate` — the calendar table couldn't calculate its min/max year range properly, which threw off the whole relationship. Fixed it by explicitly setting `Arrival Date` to a Date type in Power Query before loading the model, which let `DimDate` build correctly and the relationship snap into place without issues.
 
-## SECTION D: DAX & BUSINESS CALCULATIONS
+---
 
-A total of 12 DAX measures were constructed within a dedicated `_AllMeasures` table to evaluate operational throughput, financial loss from cancellations, and temporal growth dynamics.
+## SECTION D: DAX & Business Calculations
 
-### Key DAX Explanations
+I built 12 measures in total, grouped into a dedicated `_AllMeasures` table, covering booking volume, cancellation impact, and revenue growth over time. Below are the six I think are most important to the analysis.
 
-1. **`Total Revenue`**
-   - **Calculates:** Gross monetary revenue generated across reservation records.
-   - **Utility:** Core high-level financial performance indicator.
-   - **Functions Used:** `SUM()`
-   - **Filter Context:** Evaluates dynamically based on active date ranges, hotel properties, or customer types.
-   - **Dashboard Placement:** Page 1 Executive KPI Header.
+### 1. `Total Revenue`
+Sums `Booking Revenue` across all reservations — the headline financial number on the dashboard. Uses `SUM()`, and responds dynamically to whatever date range, hotel, or customer filter is active. Sits at the top of Page 1 as a KPI card.
 
-2. **`Cancellation Rate %`**
-   - **Calculates:** Proportion of total reservations that resulted in cancellation.
-   - **Utility:** Measures inventory churn and revenue risk.
-   - **Functions Used:** `DIVIDE()`, `CALCULATE()`
-   - **Filter Context:** Evaluates divide logic with zero-handling across selected filter dimensions.
-   - **Dashboard Placement:** Page 1 Executive KPI Card & Page 2 Cancellation Analysis.
+### 2. `Cancellation Rate %`
+Divides cancelled bookings by total bookings using `DIVIDE()` and `CALCULATE()`, with zero-handling built in so it doesn't error out on an empty filter context. This is really the measure the whole exam is built around — it shows up as a KPI card on Page 1 and drives most of the diagnostic work on Page 2.
 
-3. **`Lost Revenue`**
-   - **Calculates:** Monetary value attributed to canceled reservations.
-   - **Utility:** Quantifies total financial leakage from booking cancellations.
-   - **Functions Used:** `CALCULATE()`, `SUM()`
-   - **Filter Context:** Explicitly filters `Fact_bookings` for `is_canceled = 1`.
-   - **Dashboard Placement:** Page 3 Diagnostic Analysis.
+### 3. `Lost Revenue`
+Uses `CALCULATE()` with an explicit filter for `is_canceled = 1` to isolate the revenue tied to cancelled bookings only. This quantifies the actual financial cost of cancellations rather than just the rate, and it's featured on Page 3 where I dig into why cancellations happen.
 
-4. **`Prior Year Revenue`**
-   - **Calculates:** Total revenue generated in the equivalent historical period one year prior.
-   - **Utility:** Establishes temporal comparative baselines.
-   - **Functions Used:** `CALCULATE()`, `SAMEPERIODLASTYEAR()`
-   - **Filter Context:** Requires continuous dates supplied by `DimDate`.
-   - **Dashboard Placement:** Page 1 Multi-Year Trend Analysis.
+### 4. `Prior Year Revenue`
+`CALCULATE()` combined with `SAMEPERIODLASTYEAR()` to pull the equivalent revenue figure from a year earlier. This only works because of the dedicated `DimDate` table with continuous dates — it's used as the baseline for the year-over-year comparison on Page 1.
 
-5. **`YoY Revenue Growth %`**
-   - **Calculates:** Percentage change in revenue compared to the prior year.
-   - **Utility:** Evaluates annual business growth acceleration or deceleration.
-   - **Functions Used:** `VAR`, `DIVIDE()`
-   - **Filter Context:** Compares current time slice to the same window in `DimDate` for the prior year.
-   - **Dashboard Placement:** Page 1 Executive KPI Header.
+### 5. `YoY Revenue Growth %`
+Built with a `VAR` to hold the prior-year figure and `DIVIDE()` to calculate the percentage change against it. Shows whether the business is growing or shrinking year on year, and sits alongside `Total Revenue` on the executive KPI header.
 
-6. **`Revenue Contribution %`**
-   - **Calculates:** Proportion of total global revenue generated by a specific segment or hotel category.
-   - **Utility:** Pinpoints high-value revenue drivers across dimensions.
-   - **Functions Used:** `DIVIDE()`, `CALCULATE()`, `ALL()`
-   - **Filter Context:** Uses `ALL()` on the denominator to remove local dimension filters.
-   - **Dashboard Placement:** Page 2 Market Segment Breakdown.
+### 6. `Revenue Contribution %`
+Uses `DIVIDE()` and `CALCULATE()` with `ALL()` applied to the denominator, so the total in the denominator ignores whatever local filter is active (e.g. a selected market segment) while the numerator still respects it. This is what lets the segment breakdown on Page 2 show each segment's share of total revenue rather than just its raw value.
 
-  ## SECTION E: DASHBOARD DESIGN & VISUALIZATION
+---
 
-The reporting solution is structured into 3 interactive, purpose-built report pages designed to guide stakeholders from macro executive performance down to root-cause operational diagnostics.
+## SECTION E: Dashboard Design & Visualization
 
-### Page Breakdown & Analytical Focus
+The report is split into three pages, moving from a high-level executive view down to root-cause diagnostics.
 
-#### Page 1: Executive Overview
-- **Objective:** Provide senior leadership with immediate visibility into global operational health, top-line revenue performance, and overall cancellation impact.
-- **Key Visuals:**
-  - KPI Header Cards displaying `Total Revenue`, `Total Bookings`, `Cancellation Rate %`, and `ADR`.
-  - Line Chart visualizing multi-year revenue trends across arrival dates.
-  - Donut Chart breaking down overall revenue contribution by hotel property type (City vs. Resort).
-- **Interactivity:** Global Year and Hotel Property slicers to dynamically filter executive metrics.
+### Page 1: Executive Overview
+Meant to give leadership the big picture at a glance. KPI cards up top for `Total Revenue`, `Total Bookings`, `Cancellation Rate %`, and ADR, a line chart tracking revenue across arrival dates over the full multi-year span, and a donut chart splitting revenue between the City and Resort hotels. Year and hotel-property slicers sit at the top so the whole page filters together.
 
-#### Page 2: Segment & Customer Analysis
-- **Objective:** Analyze purchasing behavior across customer profiles, distribution paths, and market segments to identify profitability drivers.
-- **Key Visuals:**
-  - Clustered Bar Chart analyzing revenue yield across market segments (`Online TA`, `Offline TA/TO`, `Direct`, `Corporate`).
-  - Stacked Column Chart evaluating total booking volume across customer types (`Transient`, `Contract`, `Group`) split by completion status.
-  - Summary Table mapping top international customer origins by revenue.
-- **Interactivity:** Cross-filtering enabled across customer demographics and market channels.
+### Page 2: Segment & Customer Analysis
+Digs into who's actually booking and how much they're worth. A clustered bar chart compares revenue across market segments (Online TA, Offline TA/TO, Direct, Corporate), a stacked column chart breaks down booking volume by customer type and completion status, and a summary table ranks top countries of origin by revenue. Everything here cross-filters against the customer and channel selections.
 
-#### Page 3: Diagnostic & Cancellation Analysis
-- **Objective:** Investigate booking attrition patterns, lead-time vulnerabilities, and financial loss attributes to inform revenue protection strategies.
-- **Key Visuals:**
-  - Diagnostic KPI Cards displaying `Lost Revenue`, `Total Canceled Bookings`, and `High Lead Time Bookings`.
-  - Clustered Column Chart illustrating how cancellation rates scale across lead-time risk buckets (Last Minute vs. Long Lead).
-  - Financial Loss Matrix cross-tabulating lost revenue across market segments and deposit types.
-- **Interactivity:** Lead-time group slicers allowing dynamic deep-dives into high-risk reservation windows.
+### Page 3: Diagnostic & Cancellation Analysis
+This is where I try to explain *why* cancellations happen, not just how many. KPI cards for `Lost Revenue`, total cancelled bookings, and high-lead-time bookings sit up top, a clustered column chart shows how cancellation rate scales across the lead-time buckets from Section B, and a matrix cross-tabs lost revenue by market segment and deposit type. A lead-time slicer lets you zoom into specific risk windows.
 
-## SECTION F: BUSINESS INSIGHTS & RECOMMENDATIONS
+---
 
-### 1. Key Business Findings
+## SECTION F: Business Insights & Recommendations
 
-* **Cancellation Revenue Leakage:** High overall cancellation rates significantly degrade projected gross margins. Overbooking strategies and uncollected deposits directly result in substantial lost revenue.
-* **Lead Time Vulnerability:** Reservations booked more than 90 days in advance exhibit exponentially higher cancellation rates compared to short-lead bookings, indicating that long planning horizons without non-refundable deposits create severe inventory churn.
-* **Channel Performance:** Online Travel Agencies (OTAs) drive the largest overall volume of bookings but carry higher cancellation rates compared to Direct and Corporate booking channels.
-* **Demographic Spend Dynamics:** Transient guest segments generate the highest Average Daily Rate (ADR), whereas Family segments generate longer average length of stay but lower total volume.
+### Key Findings
+- **Cancellations are eating into revenue more than expected.** The overall cancellation rate is high enough that it's a real drag on projected income, not just background noise — a meaningful chunk of "booked" revenue never actually converts.
+- **Long lead times are risky.** Bookings made more than 90 days out cancel far more often than last-minute ones. Without a non-refundable deposit attached, a long booking window seems to invite cancellation.
+- **OTAs bring volume but also risk.** Online Travel Agencies generate the most bookings overall, but they also carry noticeably higher cancellation rates than Direct or Corporate channels.
+- **Family vs. transient guests behave differently.** Transient guests pay the highest ADR, while family bookings stay longer on average but show up in smaller numbers overall.
 
-### 2. Actionable Strategic Recommendations
-
-1. **Optimize Lead-Time Deposit Policies:** Enforce mandatory non-refundable deposits or tiered cancellation fees for bookings made with a lead time exceeding 60 days to reduce high-lead inventory attrition.
-2. **Incentivize Direct Channel Bookings:** Offer exclusive perks (e.g., free room upgrades, flexible late check-out) for direct website bookings to shift customer volume away from high-commission, high-churn OTA platforms.
-3. **Targeted Length-of-Stay Promotions:** Implement minimum-length-of-stay discounts during off-peak periods to stabilize occupancy rates and boost total booking revenue per guest.
-4. **Dynamic Pricing for High-ADR Segments:** Apply surge pricing model adjustments during peak arrival months targeting high-spending transient and corporate travelers to maximize overall revenue yield.
+### Recommendations
+1. **Tighten deposit policy on long-lead bookings.** Require a non-refundable deposit, or a tiered cancellation fee, for any booking made more than 60 days out to cut down on high-lead-time attrition.
+2. **Push direct bookings harder.** Offer perks like a free upgrade or flexible late checkout for guests booking straight through the hotel's own website, to pull volume away from high-commission, high-cancellation OTA channels.
+3. **Run length-of-stay promotions in off-peak months.** Minimum-stay discounts during slower periods could help stabilize occupancy and lift total revenue per guest.
+4. **Consider dynamic pricing for peak-season transient and corporate travelers.** Since these segments already carry the highest ADR, adjusting pricing upward during peak arrival months could capture more of that willingness to pay.
 
