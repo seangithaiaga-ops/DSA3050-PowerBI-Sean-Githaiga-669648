@@ -174,3 +174,33 @@ A total of 12 DAX measures were constructed within a dedicated `_AllMeasures` ta
    - **Filter Context:** Uses `ALL()` on the denominator to remove local dimension filters.
    - **Dashboard Placement:** Page 2 Market Segment Breakdown.
 
+  ## SECTION E: DASHBOARD DESIGN & VISUALIZATION
+
+The reporting solution is structured into 3 interactive, purpose-built report pages designed to guide stakeholders from macro executive performance down to root-cause operational diagnostics.
+
+### Page Breakdown & Analytical Focus
+
+#### Page 1: Executive Overview
+- **Objective:** Provide senior leadership with immediate visibility into global operational health, top-line revenue performance, and overall cancellation impact.
+- **Key Visuals:**
+  - KPI Header Cards displaying `Total Revenue`, `Total Bookings`, `Cancellation Rate %`, and `ADR`.
+  - Line Chart visualizing multi-year revenue trends across arrival dates.
+  - Donut Chart breaking down overall revenue contribution by hotel property type (City vs. Resort).
+- **Interactivity:** Global Year and Hotel Property slicers to dynamically filter executive metrics.
+
+#### Page 2: Segment & Customer Analysis
+- **Objective:** Analyze purchasing behavior across customer profiles, distribution paths, and market segments to identify profitability drivers.
+- **Key Visuals:**
+  - Clustered Bar Chart analyzing revenue yield across market segments (`Online TA`, `Offline TA/TO`, `Direct`, `Corporate`).
+  - Stacked Column Chart evaluating total booking volume across customer types (`Transient`, `Contract`, `Group`) split by completion status.
+  - Summary Table mapping top international customer origins by revenue.
+- **Interactivity:** Cross-filtering enabled across customer demographics and market channels.
+
+#### Page 3: Diagnostic & Cancellation Analysis
+- **Objective:** Investigate booking attrition patterns, lead-time vulnerabilities, and financial loss attributes to inform revenue protection strategies.
+- **Key Visuals:**
+  - Diagnostic KPI Cards displaying `Lost Revenue`, `Total Canceled Bookings`, and `High Lead Time Bookings`.
+  - Clustered Column Chart illustrating how cancellation rates scale across lead-time risk buckets (Last Minute vs. Long Lead).
+  - Financial Loss Matrix cross-tabulating lost revenue across market segments and deposit types.
+- **Interactivity:** Lead-time group slicers allowing dynamic deep-dives into high-risk reservation windows.
+
