@@ -32,3 +32,53 @@ Investigating high booking cancellation rates, seasonal revenue fluctuations, cu
 3. What is the relationship between booking lead time and cancellation likelihood across different market segments?
 4. Which customer types and market segments generate the highest average revenue per booking?
 5. How do cancellation rates differ based on deposit types (e.g., Non-Refund vs. No Deposit)?
+
+## SECTION B: POWER QUERY – DATA CLEANING & TRANSFORMATION
+
+### 1. Inconsistent Category Formatting
+- **Problem:** The `market_segment` and `distribution_channel` fields had irregular casing.
+- **Transformation:** Applied `Format -> Capitalize Each Word`.
+- **Reason:** Standardizes values so categories are not split during visual slicing.
+- **Result:** Clean, uniformly capitalized market categories.
+
+### 2. Disparate Date Components
+- **Problem:** Arrival year, month, and day were stored across 3 separate columns.
+- **Transformation:** Created custom `Arrival Date` column using M function `#date()`.
+- **Reason:** Required for setting up continuous relationships with `DimDate`.
+- **Result:** A single valid `Date` column for time intelligence.
+
+### 3. Null and Missing Values
+- **Problem:** The `country` field contained null/missing values.
+- **Transformation:** Replaced null values with `"Unknown"`.
+- **Reason:** Prevents missing value blanks in geography visuals and slicers.
+- **Result:** Categorized unknown regions cleanly.
+
+### 4. Separate Weekend/Weekday Nights
+- **Problem:** Total length of stay was divided across weekend and week nights.
+- **Transformation:** Added custom column `Total Nights` (`stays_in_weekend_nights` + `stays_in_week_nights`).
+- **Reason:** Provides a single metric to evaluate guest duration.
+- **Result:** Unified total stay night metric.
+
+### 5. Missing Total Revenue Field
+- **Problem:** Dataset only supplied Average Daily Rate (`adr`), not total reservation value.
+- **Transformation:** Added custom column `Booking Revenue` (`Total Nights` * `adr`).
+- **Reason:** Needed to compute core monetary performance measures.
+- **Result:** Accurate overall booking monetary value.
+
+### 6. Continuous Ungrouped Lead Times
+- **Problem:** `lead_time` in days was too granular for visual grouping.
+- **Transformation:** Added conditional column `Lead Time Group` bucketed into 0-7 days, 8-30 days, 31-90 days, 90+ days.
+- **Reason:** Enables strategic lead time analysis.
+- **Result:** Categorical lead time buckets.
+
+### 7. Invalid Zero-Guest Records
+- **Problem:** Occasional records showed 0 adults, 0 children, and 0 babies.
+- **Transformation:** Applied row filter to exclude entries where total guest count equals zero.
+- **Reason:** Cleans invalid transactional noise from analysis.
+- **Result:** Dataset filtered to valid guest stays only.
+
+### 8. Flat Table Schema Architecture
+- **Problem:** Data was loaded as one single unnormalized flat table.
+- **Transformation:** Referenced `FactBookings` to spawn `DimHotel` with unique hotel categories.
+- **Reason:** Transitions architecture toward a normalized Star Schema.
+- **Result:** Lean dimension lookup query created.
